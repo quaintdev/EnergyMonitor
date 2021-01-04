@@ -11,15 +11,7 @@ String PASS = "PASSWORD";
 String HOST = "192.168.0.255";
 String PORT = "7007";
 
-double valSensor = 0.0;
-
 SoftwareSerial esp8266(RX, TX);
-
-double getSensorData()
-{
-  double Irms = emon1.calcIrms(1480);
-  return Irms;
-}
 
 bool sendCommand(String command, char readReplay[])
 {
@@ -40,12 +32,18 @@ void setup()
 
 void loop()
 {
+  double Irms = emon1.calcIrms(1480);
+  /*
+  The CT sensor is unreliable for low currents.
+  We do not log data if current is below 0.80 A.
+  */
+  if (Irms < 0.80)
+    return;
   sendCommand("AT+CIPSTART=0,\"UDP\",\"" + HOST + "\"," + PORT, "OK");
-  valSensor = getSensorData();
-  String getData = "> I = " + String(valSensor) + ", P = " + String(valSensor * 230);
-  int dataLength = getData.length() + 2;
-  sendCommand("AT+CIPSEND=0," + String(dataLength), ">");
-  esp8266.println(getData);
+  String energyData = "> I = " + String(Irms) + ", P = " + String(Irms * 230);
+  int dataSize = energyData.length() + 2;
+  sendCommand("AT+CIPSEND=0," + String(dataSize), ">");
+  esp8266.println(energyData);
   sendCommand("AT+CIPCLOSE=0", "OK");
   delay(3000);
 }
