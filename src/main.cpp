@@ -1,28 +1,60 @@
+#include "LowPower.h"
 #include "EmonLib.h"
-EnergyMonitor emon1;
-
 #include <SoftwareSerial.h>
+
+EnergyMonitor emon1;
 #define RX 10
 #define TX 11
 
 SoftwareSerial esp8266(RX, TX);
+int interval = 3000;
+
+void writeToESP(double reading)
+{
+  esp8266.print("cu value=" + String(reading));
+  esp8266.write('\n');
+  Serial.write("send\n");
+}
 
 void setup()
 {
   Serial.begin(9600);
   esp8266.begin(115200);
   emon1.current(1, 30);
-  delay(15000);
+  delay(10000);
 }
+int invalidCount = 1;
+int validCount = 1;
 void loop()
 {
-  double Irms = emon1.calcIrms(1480);
-  if (esp8266.available())
+  double I = emon1.calcIrms(1480);
+  if (I < 1)
   {
-    Serial.println(esp8266.readStringUntil('\n'));
+    invalidCount++;
+    validCount = 1;
+    if (invalidCount >= 2)
+    {
+      if (invalidCount > 10)
+      {
+        writeToESP(0.0);
+        invalidCount = 2;
+      }
+      LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+      return;
+    }
   }
-  esp8266.print("cu value=" + String(Irms));
-  esp8266.write('\n');
-  Serial.write("send\n");
-  delay(3000);
+  else
+  {
+    validCount++;
+    invalidCount = 1;
+  }
+  if (validCount > 3 && invalidCount == 1)
+  {
+    if (esp8266.available())
+    {
+      Serial.println(esp8266.readStringUntil('\n'));
+    }
+    writeToESP(I);
+  }
+  delay(interval);
 }
