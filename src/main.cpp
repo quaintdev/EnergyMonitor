@@ -21,7 +21,7 @@ void setup()
   Serial.begin(9600);
   esp8266.begin(115200);
   emon1.current(1, 30);
-  delay(10000);
+  delay(15000);
 }
 int invalidCount = 1;
 int validCount = 1;
@@ -34,7 +34,7 @@ void loop()
     validCount = 1;
     if (invalidCount >= 2)
     {
-      if (invalidCount > 10)
+      if (invalidCount > 15)
       {
         writeToESP(0.0);
         invalidCount = 2;
@@ -55,6 +55,10 @@ void loop()
       Serial.println(esp8266.readStringUntil('\n'));
     }
     writeToESP(I);
+  }
+  else
+  {
+    writeToESP(0.0);
   }
   delay(interval);
 }
