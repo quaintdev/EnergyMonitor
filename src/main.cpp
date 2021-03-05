@@ -21,7 +21,7 @@ void setup()
   Serial.begin(9600);
   esp8266.begin(115200);
   emon1.current(1, 30);
-  delay(15000);
+  delay(3000);
 }
 int invalidCount = 1;
 int validCount = 1;

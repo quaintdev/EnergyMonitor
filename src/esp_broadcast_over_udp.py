@@ -29,7 +29,15 @@ def broadcast(message: bytes):
 
 
 do_connect()
-time.sleep(10)
+
+# warning:
+# Commenting below line disables REPL and hence you will not be able to push any update
+# unless you reflash your ESP. I am removing the delay since I don't intend to push any
+# update. This also resolves the watchdog issue with long delays. Watchdog does not like
+# long delays and does a soft reset sometimes as it finds delays as non responsive script.
+
+# time.sleep(10)
+
 uos.dupterm(None, 1)    # Detach UART from REPL
 uart = UART(0, 115200)  # init with given baudrate
 uart.write(bytearray('ready'))
@@ -42,4 +50,3 @@ while True:
         line = ""
         uart.write(bytearray("ok"))
         time.sleep(2)
-        gc.collect()
